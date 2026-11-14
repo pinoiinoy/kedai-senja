@@ -18,6 +18,13 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])
 Route::post('/login', [LoginController::class, 'login'])
     ->name('login.process');
 
+// Route untuk memproses logout pengguna
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
+
+
+
 // Route sementara untuk menguji login Manajer
 Route::get('/manajer/dashboard', function () {
 

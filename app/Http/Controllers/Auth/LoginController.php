@@ -4,28 +4,32 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-// Menggunakan fitur autentikasi bawaan laravel
+
+// Menggunakan fitur autentikasi bawaan Laravel
 use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
     /**
-     * Menampilkan Halaman Login
+     * Menampilkan halaman Login
      */
     public function showLoginForm()
     {
+        // Menampilkan halaman login
         return view('auth.login');
     }
+
     /**
-     * Memproses data login yang dikirim oleh pengguna
+     * Memproses data Login yang dikirim oleh pengguna
      */
     public function login(Request $request)
-{
+    {
         // Memeriksa apakah email dan password sudah diisi dengan benar
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
+
         // Memeriksa kecocokan email dan password dengan data di database
         if (!Auth::attempt($credentials)) {
             // Mengembalikan pengguna ke halaman login jika tidak cocok
@@ -33,6 +37,7 @@ class LoginController extends Controller
                 'email' => 'Email atau password tidak sesuai.',
             ])->onlyInput('email');
         }
+
         // Mengambil data pengguna yang berhasil login
         $user = Auth::user();
 
@@ -40,7 +45,7 @@ class LoginController extends Controller
         if (!in_array($user->role, ['kasir', 'manajer'], true)) {
             // Mengeluarkan pengguna jika rolenya bukan kasir atau manajer
             Auth::logout();
-            
+
             // Menghapus session lama untuk menjaga keamanan
             $request->session()->invalidate();
 
@@ -49,9 +54,10 @@ class LoginController extends Controller
 
             // Mengembalikan pengguna ke halaman login dengan pesan kesalahan
             return back()->withErrors([
-                'email'=> 'Akun ini tidak memiliki akses ke website staf.',
+                'email' => 'Akun ini tidak memiliki akses ke website staf.',
             ])->onlyInput('email');
         }
+
         // Memperbarui session ID setelah login berhasil
         $request->session()->regenerate();
 
@@ -59,11 +65,28 @@ class LoginController extends Controller
         if ($user->role === 'manajer') {
             return redirect('/manajer/dashboard');
         }
+
         // Mengarahkan kasir ke dashboard kasir
         if ($user->role === 'kasir') {
             return redirect('/kasir/dashboard');
         }
+    }
 
+    /**
+     * Memproses Logout pengguna
+     */
+    public function logout(Request $request)
+    {
+        // Mengeluarkan pengguna dari sistem
+        Auth::logout();
 
-}
+        // Menghapus session lama pengguna
+        $request->session()->invalidate();
+
+        // Membuat token CSRF baru untuk keamanan
+        $request->session()->regenerateToken();
+
+        // Mengarahkan pengguna kembali ke halaman login
+        return redirect('/login');
+    }
 }
